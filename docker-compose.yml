@@ -1,107 +1,95 @@
 services:
-  redis-master:
-    image: redis:7-alpine
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+  valkey-master:
+    image: valkey/valkey:latest
+    container_name: valkey-master
+    command: ["valkey-server", "/etc/valkey/valkey.conf"]
     volumes:
-      - ./docker/redis/master/redis.conf:/usr/local/etc/redis/redis.conf
-      - redis-master-data:/data
+      - ./docker/valkey/master/valkey.conf:/etc/valkey/valkey.conf
+      - valkey-master-data:/data
     ports:
       - "46390:6379"
     networks:
-      - redis-net
+      - valkey-net
     healthcheck:
-      test: ["CMD", "redis-cli", "-h", "127.0.0.1", "ping"]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 20
       start_period: 5s
 
-  redis-slave:
-    image: redis:7-alpine
+  valkey-slave:
+    image: valkey/valkey:latest
+    container_name: valkey-slave
     depends_on:
-      redis-master:
+      valkey-master:
         condition: service_healthy
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    command: ["valkey-server", "/etc/valkey/valkey.conf"]
     volumes:
-      - ./docker/redis/slave/redis.conf:/usr/local/etc/redis/redis.conf
-      - redis-slave-data:/data
+      - ./docker/valkey/slave/valkey.conf:/etc/valkey/valkey.conf
+      - valkey-slave-data:/data
     ports:
       - "46391:6379"
     networks:
-      - redis-net
+      - valkey-net
     healthcheck:
-      test: ["CMD", "redis-cli", "-h", "127.0.0.1", "ping"]
+      test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 20
       start_period: 5s
 
-  sentinel-1:
-    image: redis:7-alpine
+  valkey-sentinel-1:
+    image: valkey/valkey:latest
+    container_name: valkey-sentinel-1
     depends_on:
-      redis-master:
+      valkey-master:
         condition: service_healthy
-      redis-slave:
+      valkey-slave:
         condition: service_started
-    command: ["sh", "-c", "until redis-cli -h redis-master -p 6379 ping; do echo waiting for master; sleep 1; done; exec redis-sentinel /usr/local/etc/redis/sentinel.conf"]
+    command: ["valkey-sentinel", "/etc/valkey/sentinel-1.conf"]
     volumes:
-      - ./docker/sentinel/sentinel-1.conf:/usr/local/etc/redis/sentinel.conf
+      - ./docker/valkey/sentinel/sentinel-1.conf:/etc/valkey/sentinel-1.conf
     ports:
       - "46379:26379"
-    mem_limit: 32m
     networks:
-      - redis-net
+      - valkey-net
 
-  sentinel-2:
-    image: redis:7-alpine
+  valkey-sentinel-2:
+    image: valkey/valkey:latest
+    container_name: valkey-sentinel-2
     depends_on:
-      redis-master:
+      valkey-master:
         condition: service_healthy
-      redis-slave:
+      valkey-slave:
         condition: service_started
-    command: ["sh", "-c", "until redis-cli -h redis-master -p 6379 ping; do echo waiting for master; sleep 1; done; exec redis-sentinel /usr/local/etc/redis/sentinel.conf"]
+    command: ["valkey-sentinel", "/etc/valkey/sentinel-2.conf"]
     volumes:
-      - ./docker/sentinel/sentinel-2.conf:/usr/local/etc/redis/sentinel.conf
+      - ./docker/valkey/sentinel/sentinel-2.conf:/etc/valkey/sentinel-2.conf
     ports:
       - "46380:26379"
-    mem_limit: 32m
     networks:
-      - redis-net
+      - valkey-net
 
-  sentinel-3:
-    image: redis:7-alpine
+  valkey-sentinel-3:
+    image: valkey/valkey:latest
+    container_name: valkey-sentinel-3
     depends_on:
-      redis-master:
+      valkey-master:
         condition: service_healthy
-      redis-slave:
+      valkey-slave:
         condition: service_started
-    command: ["sh", "-c", "until redis-cli -h redis-master -p 6379 ping; do echo waiting for master; sleep 1; done; exec redis-sentinel /usr/local/etc/redis/sentinel.conf"]
+    command: ["valkey-sentinel", "/etc/valkey/sentinel-3.conf"]
     volumes:
-      - ./docker/sentinel/sentinel-3.conf:/usr/local/etc/redis/sentinel.conf
+      - ./docker/valkey/sentinel/sentinel-3.conf:/etc/valkey/sentinel-3.conf
     ports:
       - "46381:26379"
-    mem_limit: 32m
     networks:
-      - redis-net
-
-  cache-redis:
-    image: redis:7-alpine
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-    volumes:
-      - ./docker/redis/cache/redis.conf:/usr/local/etc/redis/redis.conf
-      - redis-cache-data:/data
-    ports:
-      - "46392:6379"
-    networks:
-      - redis-net
+      - valkey-net
 
 networks:
-  redis-net:
+  valkey-net:
     driver: bridge
 
 volumes:
-  redis-master-data:
-  redis-slave-data:
-  redis-cache-data:
-
-
+  valkey-master-data:
+  valkey-slave-data:
