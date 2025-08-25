@@ -53,6 +53,7 @@ services:
       - "46379:26379"
     networks:
       - valkey-net
+    restart: unless-stopped
 
   valkey-sentinel-2:
     image: valkey/valkey:latest
@@ -69,6 +70,7 @@ services:
       - "46380:26379"
     networks:
       - valkey-net
+    restart: unless-stopped
 
   valkey-sentinel-3:
     image: valkey/valkey:latest
@@ -85,6 +87,7 @@ services:
       - "46381:26379"
     networks:
       - valkey-net
+    restart: unless-stopped
 
 networks:
   valkey-net:
